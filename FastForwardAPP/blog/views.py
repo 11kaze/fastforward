@@ -10,11 +10,34 @@ from django.views.generic import (
     DeleteView
 )
 from .models import Post
-import operator
+# import operator
 from django.urls import reverse_lazy
 from django.contrib.staticfiles.views import serve
-
+from django import forms
 from django.db.models import Q
+from django.core import serializers
+from .serializers import PostSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+import datetime
+
+def handler404(request, exception):
+    context = {}
+    response = render(request, "blog/404.html", context=context)
+    response.status_code = 404
+    return response
+
+class fullFillAPI(APIView):
+    
+    def get(self, request, *args, **kwargs):
+        # todos = Post.objects.filter(fullfillment_Date=datetime.datetime.now()+ datetime.timedelta(days=6))
+        todos = Post.objects.all()
+        serializer = PostSerializer(todos, many=True)
+        emails = User.objects.filter().values_list('id','email')
+        # emails = serializers.serialize('json', emails)
+        print(serializer.data,emails[0])
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def home(request):
@@ -44,7 +67,7 @@ class PostListView(ListView):
     template_name = 'blog/home.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'posts'
     ordering = ['-date_posted']
-    paginate_by = 2
+    paginate_by = 10
 
 
 class UserPostListView(ListView):
@@ -66,17 +89,16 @@ class PostDetailView(DetailView):
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     template_name = 'blog/post_form.html'
-    fields = ['title', 'content', 'file']
-
+    fields = ['title', 'content', 'file', 'fullfillment_Date']
+    
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
-
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     template_name = 'blog/post_form.html'
-    fields = ['title', 'content', 'file']
+    fields = ['title', 'content', 'file','fullfillment_Date']
 
     def form_valid(self, form):
         form.instance.author = self.request.user

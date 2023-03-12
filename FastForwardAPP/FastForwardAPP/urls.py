@@ -20,6 +20,8 @@ from users import views as user_views
 from django.conf import settings
 from django.conf.urls.static import static
 import blog
+# from django.conf.urls import handler404
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
